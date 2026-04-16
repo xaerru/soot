@@ -1109,8 +1109,15 @@ public class AsmMethodSource implements MethodSource {
       if (!stack.isEmpty()) {
         Operand o1 = pop();
         if (!units.containsKey(o1.insn)) {
-          InvokeExpr iexpr = (InvokeExpr) getFrame(o1.insn).out()[0].value;
-          setUnit(o1.insn, Jimple.v().newInvokeStmt(iexpr));
+          Value val = (Value)getFrame(o1.insn).out()[0].value;
+          if (val instanceof InvokeExpr) {
+            InvokeExpr iexpr = (InvokeExpr)val;
+            setUnit(o1.insn, Jimple.v().newInvokeStmt(iexpr));
+          } else {
+              // In some class files in dacapo benchmarks, the stack is not empty on void return
+              // Pop and ignore but give a warning
+              logger.warn("Non empty stack on void return");
+          }
         }
       }
       if (!units.containsKey(insn)) {

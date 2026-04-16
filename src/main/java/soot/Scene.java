@@ -208,11 +208,7 @@ public class Scene {
     return reservedNames;
   }
 
-  /**
-   * If this name is in the set of reserved names, then return a quoted version of it. Else pass it through. If the name
-   * consists of multiple parts separated by dots, the individual names are checked as well.
-   */
-  public String quotedNameOf(String s) {
+  public String quotedNameOfClass(String s) {
     // Pre-check: Is there a chance that we need to escape something?
     // If not, skip the transformation altogether.
     boolean found = s.indexOf('-') > -1;
@@ -240,6 +236,84 @@ public class Scene {
       }
     }
     return res.toString();
+  }
+
+  String quoteNameInSubsignature(String subsignature) {
+      if (subsignature == null || subsignature.trim().isEmpty()) {
+          return subsignature;
+      }
+
+      int parenIndex = subsignature.indexOf('(');
+      String declarationPart = (parenIndex != -1) ? subsignature.substring(0, parenIndex) : subsignature;
+
+      // Process the parameters if parentheses exist
+      String parametersPart = "";
+      if (parenIndex != -1) {
+          int closeParenIndex = subsignature.lastIndexOf(')');
+          if (closeParenIndex > parenIndex) {
+              String paramsContent = subsignature.substring(parenIndex + 1, closeParenIndex);
+              StringBuilder processedParams = new StringBuilder("(");
+
+              if (!paramsContent.isEmpty()) {
+                  // Split by comma and process each parameter
+                  String[] params = paramsContent.split(",");
+                  for (int i = 0; i < params.length; i++) {
+                      if (params[i].contains("."))
+                        processedParams.append(quotedNameOfClass(params[i]));
+                      else
+                        processedParams.append(params[i]);
+
+                      if (i < params.length - 1) {
+                          processedParams.append(",");
+                      }
+                  }
+              }
+
+              processedParams.append(")");
+
+              processedParams.append(subsignature.substring(closeParenIndex + 1));
+              parametersPart = processedParams.toString();
+          } else {
+              // Fallback just in case of a signature with missing ')'
+              parametersPart = subsignature.substring(parenIndex);
+          }
+      }
+
+      // Find the last space in the declaration part, which separates Type from Name
+      int lastSpaceIndex = declarationPart.lastIndexOf(' ');
+
+      if (lastSpaceIndex == -1) {
+          // No space found, meaning the string is just the name
+          if (reservedNames.contains(declarationPart)) {
+              return "'" + declarationPart + "'" + parametersPart;
+          }
+          return declarationPart + parametersPart;
+      }
+
+      // Extract the parts and reconstruct the string
+      String typePrefix = declarationPart.substring(0, lastSpaceIndex + 1); // Includes the space
+      String name = declarationPart.substring(lastSpaceIndex + 1);
+
+      if (reservedNames.contains(name)) {
+          return quotedNameOfClass(typePrefix) + "'" + name + "'" + parametersPart;
+      }
+      return quotedNameOfClass(typePrefix) + name + parametersPart;
+  }
+
+  /**
+   * If this name is in the set of reserved names, then return a quoted version of it. Else pass it through. If the name
+   * consists of multiple parts separated by dots, the individual names are checked as well.
+   * Also supports method signatures
+   */
+  public String quotedNameOf(String s) {
+    if (s.charAt(0) == '<' && s.indexOf(':') > 0) {
+        int index = signatureSeparatorIndex(s);
+        String cname = sepIndexToClass(s, index);
+        String subsig = sepIndexToSubsignature(s, index);
+        return "<" + quotedNameOfClass(cname) + ": " + quoteNameInSubsignature(subsig) + ">";
+    } else {
+        return quotedNameOfClass(s);
+    }
   }
 
   /**
@@ -1828,6 +1902,8 @@ public class Scene {
             String kind = portions[0];
             String target = portions[1];
             String source = portions[2];
+            target = Scene.v().quotedNameOf(target);
+            source = Scene.v().quotedNameOf(source);
             classNames.add(source.substring(0, source.lastIndexOf('.')));
             switch (kind) {
               case "Class.forName":
@@ -1863,6 +1939,7 @@ public class Scene {
               case "Field.set*":
               case "Field.get*":
               case "Field.toString":
+              case "Field.toGenericString":
               case "Field.getName":
               case "Field.getDeclaringClass":
                 classNames.add(signatureToClass(target));

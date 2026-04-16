@@ -247,6 +247,7 @@ public class SootResolver {
   protected void bringToHierarchyUnchecked(SootClass sc) {
     String className = sc.getName();
     ClassSource is;
+    className = Scene.v().unescapeName(className);
     if (ModuleUtil.module_mode()) {
       is = ModulePathSourceLocator.v().getClassSource(className,
           com.google.common.base.Optional.fromNullable(sc.moduleName));
@@ -268,7 +269,7 @@ public class SootResolver {
           throw new SootClassNotFoundException(
               "couldn't find class: " + className + " (is your soot-class-path set properly?)" + suffix);
         } else {
-          // logger.warn(className + " is a phantom class!");
+          logger.warn(className + " is a phantom class!");
           sc.setPhantomClass();
         }
       } else {

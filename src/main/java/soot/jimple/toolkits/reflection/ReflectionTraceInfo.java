@@ -80,9 +80,11 @@ public class ReflectionTraceInfo {
           }
           final String[] portions = line.split(";", -1);
           final String kind = portions[0];
-          final String target = portions[1];
-          final String source = portions[2];
+          String target = portions[1];
+          String source = portions[2];
           final int lineNumber = portions[3].length() == 0 ? -1 : Integer.parseInt(portions[3]);
+          target = Scene.v().quotedNameOf(target);
+          source = Scene.v().quotedNameOf(source);
 
           for (SootMethod sourceMethod : inferSource(source, lineNumber)) {
             switch (kind) {

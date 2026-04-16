@@ -70,7 +70,7 @@ public class AsmClassSource extends ClassSource {
       deps.typesToSignature.addAll(scb.deps);
       // add the outer class information, could not be called in the builder, since sc needs to be
       // resolved - before calling setOuterClass()
-      if (!sc.hasOuterClass() && className.contains("$")) {
+      if (!sc.hasOuterClass() && className.contains("$") && !className.contains("HASHED")) {
         String outerClassName;
         if (className.contains("$-")) {
           /*

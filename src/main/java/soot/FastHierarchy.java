@@ -394,7 +394,16 @@ public class FastHierarchy {
    */
   public boolean canStoreClass(SootClass child, SootClass parent) {
     parent.checkLevel(SootClass.HIERARCHY);
-    child.checkLevel(SootClass.HIERARCHY);
+    boolean err = false;
+    // Ignore check for child
+    try {
+        child.checkLevel(SootClass.HIERARCHY);
+    } catch (Exception e) {
+        // e.printStackTrace();
+        // System.out.println("Child: " + child.getName());
+        // System.out.println("Parent: " + parent.getName());
+        err = true;
+    }
 
     Interval parentInterval = classToInterval.get(parent);
     Interval childInterval = classToInterval.get(child);
@@ -402,6 +411,11 @@ public class FastHierarchy {
       return parentInterval.isSubrange(childInterval);
     } else if (childInterval == null) { // child is interface
       if (parentInterval != null) { // parent is not interface
+        if (err) {
+            // System.out.println("Path 2");
+            // System.out.println("rtObject: " + rtObject.getSootClass().getName());
+            // System.out.println("returns: " + (parent == rtObject.getSootClass()));
+        }
         return parent == rtObject.getSootClass();
       } else {
         return getAllSubinterfaces(parent).contains(child);
