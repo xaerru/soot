@@ -159,4 +159,16 @@ class UnitContainer implements Unit {
   public Tag getOrComputeTag(String aName, Supplier<Tag> supplier) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public int getBytecodeOffset() {
+  	 // TO-DO : Implementations for other IR's also.
+  	  throw new UnsupportedOperationException();
+  }
+  
+  @Override
+  public void setBytecodeOffset(int bco) {
+  	 // TO-DO : Implementations for other IR's also.
+  	  throw new UnsupportedOperationException();
+  }
 }

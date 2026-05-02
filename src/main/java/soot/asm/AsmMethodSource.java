@@ -302,6 +302,7 @@ import soot.jimple.toolkits.scalar.UnconditionalBranchFolder;
 import soot.jimple.toolkits.scalar.UnreachableCodeEliminator;
 import soot.jimple.toolkits.typing.TypeAssigner;
 import soot.options.Options;
+import soot.tagkit.BytecodeOffsetTag;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.Tag;
 import soot.toolkits.exceptions.TrapTightener;
@@ -460,6 +461,18 @@ public class AsmMethodSource implements MethodSource {
       if (ln != null && ln >= 0) {
         setLineNumber(u, ln);
       }
+    }
+    /** Fix for correctly storing the bytecode offset of the unit from the bytecode instruction. */
+    if (Options.v().keep_offset() && null !=insn) {
+        Tag bcoTag = u.getTag(BytecodeOffsetTag.NAME);
+        if (bcoTag == null && insn.getBytecodeOffset() != -1) {
+        	bcoTag = new BytecodeOffsetTag(insn.getBytecodeOffset());
+        	u.addTag(bcoTag);
+        } 
+      }
+
+    if(null != insn && insn.getBytecodeOffset() != -1) {
+    	u.setBytecodeOffset(insn.getBytecodeOffset());
     }
 
     insnToStmt.put(insn, u);
