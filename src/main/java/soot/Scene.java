@@ -1903,6 +1903,7 @@ public class Scene {
               case "Field.set*":
               case "Field.get*":
               case "Field.toString":
+              case "Field.toGenericString":
               case "Field.getName":
               case "Field.getDeclaringClass":
                 classNames.add(signatureToClass(target));
